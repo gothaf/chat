@@ -258,9 +258,9 @@ h3 {
 
 @media (max-width: 768px) {
 	body {
-		font-size: 1.4rem; /* Adjust font size for smaller screens */
-		background-color:pink;
-		color:green;
+		font-size: 1.1rem; /* Adjust font size for smaller screens */
+		background-color:red;
+		
 	}
 	#root {
 		padding: 0px 5px 20px;
@@ -269,7 +269,7 @@ h3 {
 		padding: 0;
 	}
 	.message{
-		font-size:1.2rem;
+		font-size:1.1rem;
 	}
 	.bubble-content-chatgpt {
 		display: flex;
