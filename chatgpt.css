@@ -260,6 +260,7 @@ h3 {
 	body {
 		font-size: 1.4rem; /* Adjust font size for smaller screens */
 		background-color:blue;
+		color:green;
 	}
 	#root {
 		padding: 0px 5px 20px;
