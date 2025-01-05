@@ -258,7 +258,7 @@ h3 {
 
 @media (max-width: 768px) {
 	body {
-		font-size: 1.2rem; /* Adjust font size for smaller screens */
+		font-size: 1.4rem; /* Adjust font size for smaller screens */
 	}
 	#root {
 		padding: 0px 5px 20px;
@@ -271,7 +271,7 @@ h3 {
 		display: flex;
 		flex-direction: row;
 		align-items: flex-start; /* or center */
-		gap: 0;
+		gap: 5px;
 		padding: 0; /* your bubble padding here */
 	}
 }
