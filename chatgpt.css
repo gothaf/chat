@@ -256,29 +256,34 @@ h3 {
 	margin: 0;
 }
 
-@media (max-width: 768px) {
+@media only screen and (max-width: 400px) and (-webkit-device-pixel-ratio: 3) {
 	body {
 		font-size: 1.1rem; /* Adjust font size for smaller screens */
-		background-color:red;
-		
+		background-color: blue;
 	}
+
 	#root {
-		padding: 0px 5px 20px;
+		padding: 0px 2px 20px;
 	}
 	.conversation {
 		padding: 0;
 	}
-	.message{
-		font-size:1.1rem;
+	.message {
+		font-size: 1.1rem;
 	}
-	.bubble{
-		line-height:1.5;
+
+	.bubble {
+		line-height: 1.5;
+		padding: 5px 5px;
+	}
+	.message.user .bubble {
+		padding: 5px 16px;
 	}
 	.bubble-content-chatgpt {
 		display: flex;
 		flex-direction: row;
 		align-items: flex-start; /* or center */
-		gap: 5px;
+		gap: 0;
 		padding: 0; /* your bubble padding here */
 	}
 }
