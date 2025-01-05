@@ -271,6 +271,9 @@ h3 {
 	.message{
 		font-size:1.1rem;
 	}
+	.bubble{
+		line-height:1.5;
+	}
 	.bubble-content-chatgpt {
 		display: flex;
 		flex-direction: row;
