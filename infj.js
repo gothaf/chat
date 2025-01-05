@@ -2816,7 +2816,7 @@ var jsonData = [
 					content: {
 						content_type: 'text',
 						parts: [
-							'Apologies for the earlier inaccuracies. \ue203Based on the latest information, the current date and time in Ioannina, Greece, is **Saturday, December 21, 2024, 9:12 AM**.\ue204 \ue200cite\ue202turn0search0\ue201\ue206\n\nIf you have any further questions or need assistance with something else, feel free to ask. ',
+							'Apologies for the earlier inaccuracies. Based on the latest information, the current date and time in Ioannina, Greece, is **Saturday, December 21, 2024, 9:12 AM**.\n\nIf you have any further questions or need assistance with something else, feel free to ask. ',
 						],
 					},
 					status: 'finished_successfully',
