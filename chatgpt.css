@@ -1,0 +1,249 @@
+/* Dark theme background and text */
+body {
+	margin: 0;
+	padding: 0;
+	background-color: #212121;
+	color: #f3f3f3;
+	font-family: sans-serif;
+}
+p {
+	margin: 0;
+}
+.chatgpt-text-wrapper {
+	p {
+		margin: 0.5rem;
+	}
+}
+.chatgpt-text-wrapper > p:first-child {
+	margin-top: 0 !important;
+}
+
+/* Root container */
+#root {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	max-width: 50rem;
+	margin: 20px auto;
+	padding: 0 20px 20px;
+}
+
+/* Conversation container */
+.conversation {
+	padding: 20px;
+	background-color: #212121;
+	border-radius: 6px;
+}
+
+.conversation h4 {
+	margin: 0 0 10px 0;
+	font-weight: normal;
+}
+
+/* Individual message container */
+.message {
+	display: flex;
+	flex-direction: column;
+	margin: 15px 0;
+	font-size: 1rem;
+}
+
+/* Author text styling */
+.author {
+	font-weight: bold;
+	margin-bottom: 6px;
+}
+
+/* Special color for user vs ChatGPT authors */
+.message.user .author {
+	color: #212121;
+}
+.message.chatgpt .author {
+	color: #fff;
+}
+.message.custom\ user\ info .author {
+	color: #d7ba7d;
+}
+
+/* “Bubble” for each part of the message */
+.bubble {
+	display: inline-block;
+	margin-bottom: 5px;
+	padding: 5px 16px;
+	max-width: 70%;
+	border-radius: 25px;
+	position: relative;
+	line-height: 1.75;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+}
+.message.chatgpt .bubble {
+	align-self: flex-start;
+	border-radius: 12px;
+	position: relative;
+	margin-bottom: 5px;
+	max-width: 100%;
+}
+
+/* User on the left, ChatGPT on the right */
+.message.user .bubble {
+	background-color: #3c3c3c;
+	align-self: flex-end;
+}
+
+.message.custom\ user\ info .bubble {
+	background-color: #2e2e2e;
+	align-self: center;
+}
+
+/* Triangle “tail” for custom user info (center) — optional if needed */
+.message.custom\ user\ info .bubble::after {
+	content: '';
+	position: absolute;
+	top: 10px;
+	right: 50%;
+	transform: translateX(50%);
+	width: 0;
+	height: 0;
+	border-left: 8px solid #2e2e2e;
+	border-top: 8px solid transparent;
+	border-bottom: 8px solid transparent;
+}
+
+/* The main container that holds icon + text side by side */
+.bubble-content-chatgpt {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start; /* or center */
+	gap: 10px;
+	padding: 12px 16px; /* your bubble padding here */
+}
+
+/* Left icon wrapper */
+.chatgpt-icon-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* Possibly set a fixed size if you want the icon area consistent */
+	width: 36px;
+	height: 36px;
+}
+
+/* Text area on the right */
+.chatgpt-text-wrapper {
+	display: flex;
+	flex-direction: column;
+	/* style as needed */
+	color: #fff; /* for instance, if you want white text */
+}
+
+/* Force all nested <ul> levels to use the same bullet style */
+ul,
+ul ul,
+ul ul ul {
+	list-style-type: disc; /* or circle, square, etc. */
+	margin: 0;
+	padding-left: 1.5em; /* adjust indentation as desired */
+}
+
+/* If you specifically want them all to look the same color, 
+ensure the text color is inherited or set. */
+ul,
+li {
+	color: #f3f3f3; /* example text color for dark themes */
+	margin-bottom: 0.5em;
+}
+
+.icon-md,
+.icon-sidebar {
+	stroke-width: 1.5;
+	flex-shrink: 0;
+}
+.icon-md {
+	height: 18px;
+	width: 18px;
+}
+.rounded-full {
+	border-radius: 9999px;
+}
+.overflow-hidden {
+	overflow: hidden;
+}
+.justify-center {
+	justify-content: center;
+}
+.items-center {
+	align-items: center;
+}
+.w-8 {
+	width: 2rem;
+}
+.h-8 {
+	height: 2rem;
+}
+.flex {
+	display: flex;
+}
+.gizmo-bot-avatar {
+	outline: solid 1px #424242;
+}
+.text-token-text-primary {
+	color: var(--text-primary);
+}
+.p-1 {
+	padding: 0.25rem;
+}
+.bg-token-main-surface-primary {
+	background-color: #212121;
+}
+.rounded-sm {
+	border-radius: 0.125rem;
+}
+.justify-center {
+	justify-content: center;
+}
+.items-center {
+	align-items: center;
+}
+.w-8 {
+	width: 2rem;
+}
+.h-8 {
+	height: 2rem;
+}
+.flex {
+	display: flex;
+}
+.relative {
+	position: relative;
+}
+hr {
+	display: block;
+	width: 100%;
+	border-color: hsla(0, 0%, 100%, 0.25);
+	border-top-width: 1px;
+	margin-bottom: 3em;
+	margin-top: 3em;
+}
+
+table {
+	width: auto;
+	border-collapse: collapse;
+	margin: 8px 0;
+}
+th,
+td {
+	border: 1px solid #666;
+	font-size: 0.875em;
+
+	padding: 0px 10px;
+}
+th {
+	text-align: left;
+	font-size: 0.875em;
+	background-color: #333;
+	color: #fff;
+}
+h3 {
+	margin: 0;
+}
