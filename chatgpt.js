@@ -210,44 +210,55 @@ function parseListsAndHeadings(text) {
 		}
 	}
 
-	// Helper to open a new list
-	function openList(type, indent) {
-		html += `<${type}>`;
+	// Modified openList to allow an optional start number
+	function openList(type, indent, startNum = null) {
+		if (type === 'ol' && startNum !== null) {
+			// if you want the list to begin at "startNum"
+			html += `<ol start="${startNum}">`;
+		} else {
+			html += `<${type}>`;
+		}
 		stack.push({ type, indent });
 	}
 
 	// Function to handle a line that is a list item
-	function handleListItem(line, indent, isOrdered, content) {
+	// Now accepts "itemNumber" for ordered lists.
+	function handleListItem(line, indent, isOrdered, content, itemNumber = null) {
 		// Determine if we need to open or close lists
 		if (stack.length === 0) {
-			// not in a list yet, open one
-			openList(isOrdered ? 'ol' : 'ul', indent);
+			// Not in a list yet, open one
+			// For ordered: pass itemNumber to openList
+			openList(isOrdered ? 'ol' : 'ul', indent, isOrdered ? itemNumber : null);
 		} else {
-			// if the top of the stack is a different list type or same indent or less
 			let top = stack[stack.length - 1];
 			if (top.type !== (isOrdered ? 'ol' : 'ul')) {
-				// close until we can open the desired list
+				// Close until we can open the desired list
 				closeListsToIndent(indent);
-				openList(isOrdered ? 'ol' : 'ul', indent);
+				openList(isOrdered ? 'ol' : 'ul', indent, isOrdered ? itemNumber : null);
 			} else {
 				// same type, check indent
 				if (top.indent < indent) {
 					// open a nested list
-					openList(isOrdered ? 'ol' : 'ul', indent);
+					openList(isOrdered ? 'ol' : 'ul', indent, isOrdered ? itemNumber : null);
 				} else if (top.indent > indent) {
 					// close higher indent lists
 					closeListsToIndent(indent);
-					// if now the top list is not the right type, open a new one
+					// if now the top is not the right type, open a new one
 					top = stack[stack.length - 1];
 					if (!top || top.type !== (isOrdered ? 'ol' : 'ul')) {
-						openList(isOrdered ? 'ol' : 'ul', indent);
+						openList(isOrdered ? 'ol' : 'ul', indent, isOrdered ? itemNumber : null);
 					}
 				}
 			}
 		}
 
-		// Now add the <li> item
-		html += `<li>${decodeAndFormatText(content)}</li>`;
+		// Now add the <li> item.
+		// If it's an ordered list item, set value="itemNumber"
+		if (isOrdered && itemNumber !== null) {
+			html += `<li value="${itemNumber}">${decodeAndFormatText(content)}</li>`;
+		} else {
+			html += `<li>${decodeAndFormatText(content)}</li>`;
+		}
 	}
 
 	// Regex to detect lines that begin with common table-related tags
@@ -271,7 +282,7 @@ function parseListsAndHeadings(text) {
 		let matchIndent = rightTrimmed.match(/^(\s+)/);
 		let indent = matchIndent ? matchIndent[1].length : 0;
 
-		// Now we remove the leading spaces in order to parse content
+		// Now we remove the leading spaces to parse content
 		let line = rightTrimmed.trimStart();
 
 		// 1) If the line starts with a table tag, just keep it as-is
@@ -299,8 +310,9 @@ function parseListsAndHeadings(text) {
 		// 3) Ordered list item: "1. Something"
 		let olMatch = line.match(/^(\d+)\.\s+(.*)/);
 		if (olMatch) {
+			let itemNumber = parseInt(olMatch[1], 10); // parse the numeric prefix
 			let content = olMatch[2];
-			handleListItem(line, indent, true, content);
+			handleListItem(line, indent, true, content, itemNumber);
 			continue;
 		}
 
@@ -327,6 +339,7 @@ function parseListsAndHeadings(text) {
 
 	return html;
 }
+
 // on load, add messages to the root div
 // on load, add messages to the root div
 // On load, build balloon-styled chat
