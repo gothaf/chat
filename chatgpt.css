@@ -259,6 +259,7 @@ h3 {
 @media (max-width: 768px) {
 	body {
 		font-size: 1.4rem; /* Adjust font size for smaller screens */
+		background-color:blue;
 	}
 	#root {
 		padding: 0px 5px 20px;
