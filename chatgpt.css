@@ -1,11 +1,25 @@
+html {
+	font-size: 16px; /* Base font size */
+}
+
 /* Dark theme background and text */
 body {
+	font-size: 1rem;
+	line-height: 1.75;
+	letter-spacing: 0.02em;
 	margin: 0;
 	padding: 0;
 	background-color: #212121;
 	color: #f3f3f3;
 	font-family: sans-serif;
 }
+
+@media (max-width: 768px) {
+	body {
+		font-size: 1.2rem; /* Adjust font size for smaller screens */
+	}
+}
+
 p {
 	margin: 0;
 }
