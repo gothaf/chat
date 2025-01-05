@@ -259,7 +259,7 @@ h3 {
 @media (max-width: 768px) {
 	body {
 		font-size: 1.4rem; /* Adjust font size for smaller screens */
-		background-color:blue;
+		background-color:pink;
 		color:green;
 	}
 	#root {
@@ -268,7 +268,9 @@ h3 {
 	.conversation {
 		padding: 0;
 	}
-
+	.message{
+		font-size:1.2rem;
+	}
 	.bubble-content-chatgpt {
 		display: flex;
 		flex-direction: row;
