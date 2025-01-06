@@ -1,22 +1,35 @@
+function loadJSONFile(jsonFilePath, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', jsonFilePath, true);
+	xhr.responseType = 'json';
+
+	xhr.onload = function () {
+		if (xhr.status >= 200 && xhr.status < 300) {
+			callback(null, xhr.response);
+		} else {
+			callback(new Error('Failed to load JSON file: ' + xhr.status));
+		}
+	};
+
+	xhr.onerror = function () {
+		callback(new Error('Network error while loading JSON file'));
+	};
+
+	xhr.send();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 	const scriptTag = document.querySelector('script#data-config');
 	const jsonFilePath = scriptTag?.getAttribute('src');
 
 	if (jsonFilePath) {
-		fetch(jsonFilePath)
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error(`Failed to load JSON file: ${response.statusText}`);
-				}
-				return response.json();
-			})
-			.then((jsonData) => {
-				// Pass jsonData to your existing initialization logic
+		loadJSONFile(jsonFilePath, (error, jsonData) => {
+			if (error) {
+				console.error(error);
+			} else {
 				initializeChatWithData(jsonData);
-			})
-			.catch((error) => {
-				console.error('Error loading JSON data:', error);
-			});
+			}
+		});
 	} else {
 		console.error('JSON file path is not specified in the HTML.');
 	}
