@@ -555,18 +555,23 @@ function setupScrollTracking() {
 	const observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					console.log(`User viewed: ${entry.target.dataset.section}`);
+				// Trigger only when the bottom of the element is visible
+				if (entry.isIntersecting && entry.intersectionRatio > 0) {
+					console.log(`User reached the end of: ${entry.target.dataset.section}`);
 					// Example: Send to Google Analytics
 					gtag('event', 'scroll_stop', {
 						event_category: 'engagement',
 						event_label: entry.target.dataset.section,
 					});
+
+					// Unobserve after detecting the end of a message (optional)
+					observer.unobserve(entry.target);
 				}
 			});
 		},
 		{
-			threshold: 0.01, // Trigger when 20% of a message is visible
+			threshold: 0.01, // Detect any small intersection
+			rootMargin: '0px 0px -100% 0px', // Trigger when the bottom of the element is in the viewport
 		}
 	);
 
