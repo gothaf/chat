@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				console.error(error);
 			} else {
 				initializeChatWithData(jsonData);
+				setupScrollTracking(); // Setup scroll tracking after messages are loaded
 			}
 		});
 	} else {
@@ -390,9 +391,11 @@ function initializeChatWithData(jsonData) {
 		convDiv.innerHTML = '<h4>' + conversation.title + '</h4>';
 
 		// Loop through messages and create balloon style
-		messages.forEach(function (msg) {
+		messages.forEach(function (msg, index) {
 			var messageContainer = document.createElement('div');
 			messageContainer.className = 'message';
+			// Add the data-section attribute
+			messageContainer.setAttribute('data-section', `message-${index + 1}`);
 
 			// Assign a class for alignment based on author
 			// (user / chatgpt / custom user info)
@@ -543,4 +546,29 @@ function initializeChatWithData(jsonData) {
 
 		root.appendChild(convDiv);
 	}
+}
+
+// Function to setup scroll tracking
+function setupScrollTracking() {
+	const messageElements = document.querySelectorAll('.message');
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					console.log(`User viewed: ${entry.target.dataset.section}`);
+					// Example: Send to Google Analytics
+					gtag('event', 'scroll_stop', {
+						event_category: 'engagement',
+						event_label: entry.target.dataset.section,
+					});
+				}
+			});
+		},
+		{
+			threshold: 0.5, // Trigger when 50% of a message is visible
+		}
+	);
+
+	messageElements.forEach((msg) => observer.observe(msg));
 }
