@@ -566,7 +566,7 @@ function setupScrollTracking() {
 			});
 		},
 		{
-			threshold: 0.2, // Trigger when 20% of a message is visible
+			threshold: 0.01, // Trigger when 20% of a message is visible
 		}
 	);
 
