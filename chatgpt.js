@@ -552,28 +552,52 @@ function initializeChatWithData(jsonData) {
 function setupScrollTracking() {
 	const messageElements = document.querySelectorAll('.message');
 
+	// Create an Intersection Observer for when the element first becomes visible
 	const observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
-				// Trigger only when the bottom of the element is visible
-				if (entry.isIntersecting && entry.intersectionRatio > 0) {
-					console.log(`User reached the end of: ${entry.target.dataset.section}`);
-					// Example: Send to Google Analytics
-					gtag('event', 'scroll_stop', {
+				if (entry.isIntersecting && !entry.target.classList.contains('entered')) {
+					console.log(`User first saw: ${entry.target.dataset.section}`);
+
+					// Example: Send "first visible" event to Google Analytics
+					gtag('event', 'scroll_start', {
 						event_category: 'engagement',
 						event_label: entry.target.dataset.section,
 					});
 
-					// Unobserve after detecting the end of a message (optional)
-					observer.unobserve(entry.target);
+					// Mark the element as entered to avoid duplicate triggers
+					entry.target.classList.add('entered');
 				}
 			});
 		},
 		{
-			threshold: 0.01, // Detect any small intersection
-			rootMargin: '0px 0px -100% 0px', // Trigger when the bottom of the element is in the viewport
+			root: null, // Use the viewport as the root
+			rootMargin: '0px', // Trigger as soon as the element enters the viewport
+			threshold: 0.01, // Trigger when even 1% of the element is visible
 		}
 	);
 
+	// Observe each message element
 	messageElements.forEach((msg) => observer.observe(msg));
+
+	// Add a scroll event listener to detect when the element has ended
+	window.addEventListener('scroll', () => {
+		messageElements.forEach((msg) => {
+			const rect = msg.getBoundingClientRect();
+			const hasEnded = rect.bottom <= 0; // Bottom of the element has passed the top of the viewport
+
+			if (hasEnded && !msg.classList.contains('ended')) {
+				console.log(`User scrolled past: ${msg.dataset.section}`);
+
+				// Example: Send "scroll past" event to Google Analytics
+				gtag('event', 'scroll_end', {
+					event_category: 'engagement',
+					event_label: msg.dataset.section,
+				});
+
+				// Mark the element as ended to avoid duplicate triggers
+				msg.classList.add('ended');
+			}
+		});
+	});
 }
