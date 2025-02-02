@@ -37,6 +37,24 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 });
 
+document.addEventListener('click', (event) => {
+	// If a thumbnail was clicked
+	if (event.target.matches('.thumbnail')) {
+		const imageContainer = event.target.closest('.image-container');
+		const overlay = imageContainer.querySelector('.full-image-overlay');
+		overlay.classList.remove('hidden');
+	}
+
+	// If the close button or the overlay background was clicked
+	if (
+		event.target.matches('.close-overlay') ||
+		event.target.classList.contains('full-image-overlay') // optional: close if background is clicked
+	) {
+		const overlay = event.target.closest('.full-image-overlay');
+		overlay.classList.add('hidden');
+	}
+});
+
 function getConversationMessages(conversation) {
 	var messages = [];
 	var currentNode = conversation.current_node;
@@ -72,8 +90,9 @@ function getConversationMessages(conversation) {
 							}
 						}
 					}
+					let createTime = node.message.create_time || null;
 					if (parts.length > 0) {
-						messages.push({ author, parts: parts });
+						messages.push({ author, parts, createTime });
 					}
 				}
 			}
@@ -379,6 +398,10 @@ function parseListsAndHeadings(text) {
 	return html;
 }
 
+var assetsJson = {
+	'file-service://file-62tGUeckVNgDo7VxUuAMab': 'file-62tGUeckVNgDo7VxUuAMab-A3C5A976-44A7-4EEF-8355-558E41F3C5F8.jpeg',
+};
+
 // on load, add messages to the root div
 // on load, add messages to the root div
 // On load, build balloon-styled chat
@@ -527,21 +550,61 @@ function initializeChatWithData(jsonData) {
 					let bubbleHtml = '';
 					if (part.text) {
 						bubbleHtml = parseListsAndHeadings(part.text);
+						bubble.innerHTML = bubbleHtml;
+						messageContainer.appendChild(bubble);
 					} else if (part.transcript) {
 						bubbleHtml = '[Transcript]: ' + parseListsAndHeadings(part.transcript);
+						bubble.innerHTML = bubbleHtml;
+						messageContainer.appendChild(bubble);
 					} else if (part.asset) {
 						const link = assetsJson[part.asset.asset_pointer];
 						if (link) {
-							bubbleHtml = `[File]: <a href="${link}">${link}</a>`;
+							// Instead of a bubble, we'll create a "image-wrapper"
+							let imageWrapper = document.createElement('div');
+							imageWrapper.className = 'image-wrapper';
+
+							imageWrapper.innerHTML = `
+								  <div class="image-container">
+									<img class="thumbnail" src="${link}" alt="image thumbnail" />
+									<div class="full-image-overlay hidden">
+									  <img class="full-image" src="${link}" alt="full image" />
+									  <button class="close-overlay">&times;</button>
+									</div>
+								  </div>
+								`;
+
+							// Append the imageWrapper directly to messageContainer
+							messageContainer.appendChild(imageWrapper);
 						} else {
-							bubbleHtml = '[File]: -Deleted-';
+							// Possibly handle the missing asset scenario
+							let noFileDiv = document.createElement('div');
+							noFileDiv.textContent = '[File]: -Deleted-';
+							messageContainer.appendChild(noFileDiv);
 						}
 					}
-					bubble.innerHTML = bubbleHtml;
-					messageContainer.appendChild(bubble);
 				});
 			}
 
+			// Build your bubbles (existing code)...
+
+			// After building all parts in this message, append a timestamp.
+			if (msg.createTime) {
+				const formattedTime = formatDateTime(msg.createTime);
+
+				let timeStampDiv = document.createElement('div');
+				// We'll add a "timestamp" class for base styling
+				timeStampDiv.classList.add('timestamp');
+
+				// Align ChatGPT's time on the left, user's on the right
+				if (lowerAuthor.includes('chatgpt')) {
+					timeStampDiv.classList.add('timestamp-left');
+				} else {
+					timeStampDiv.classList.add('timestamp-right');
+				}
+
+				timeStampDiv.textContent = formattedTime;
+				messageContainer.appendChild(timeStampDiv);
+			}
 			convDiv.appendChild(messageContainer);
 		});
 
@@ -624,4 +687,29 @@ function loadSidebar() {
 			}
 		})
 		.catch((error) => console.error('Error loading sidebar:', error));
+}
+
+/**
+ * formatDateTime
+ *
+ * Returns only the time (HH:MM) if it's the same day as "now",
+ * otherwise returns a short date + time string.
+ *
+ * @param {number} secondsSinceEpoch - message create_time in seconds
+ * @returns {string} formatted date/time
+ */
+function formatDateTime(secondsSinceEpoch) {
+	const dateObj = new Date(secondsSinceEpoch * 1000);
+	const now = new Date();
+
+	const sameDay = dateObj.getFullYear() === now.getFullYear() && dateObj.getMonth() === now.getMonth() && dateObj.getDate() === now.getDate();
+
+	if (sameDay) {
+		// Show only time, e.g. "12:34"
+		// You can customize with options: { hour: '2-digit', minute: '2-digit' }
+		return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	} else {
+		// Show short date & time, e.g. "1/30/24, 12:34 PM"
+		return dateObj.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+	}
 }
