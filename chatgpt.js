@@ -621,7 +621,7 @@ function setupScrollTracking() {
 		(entries) => {
 			entries.forEach((entry) => {
 				if (entry.isIntersecting && !entry.target.classList.contains('entered')) {
-					console.log(`User first saw: ${entry.target.dataset.section}`);
+					/* 	console.log(`User first saw: ${entry.target.dataset.section}`); */
 
 					// Example: Send "first visible" event to Google Analytics
 					gtag('event', 'scroll_start', {
@@ -651,7 +651,7 @@ function setupScrollTracking() {
 			const hasEnded = rect.bottom <= 0; // Bottom of the element has passed the top of the viewport
 
 			if (hasEnded && !msg.classList.contains('ended')) {
-				console.log(`User scrolled past: ${msg.dataset.section}`);
+				/* console.log(`User scrolled past: ${msg.dataset.section}`); */
 
 				// Example: Send "scroll past" event to Google Analytics
 				gtag('event', 'scroll_end', {
