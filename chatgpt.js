@@ -75,15 +75,17 @@ function getConversationMessages(conversation) {
 
 				// Gather attachments (if any)
 				let attachments = [];
-				if (node.message.metadata && node.message.metadata.attachments && node.message.metadata.attachments.mime_type) {
+				if (node.message.metadata && node.message.metadata.attachments) {
 					attachments = node.message.metadata.attachments.map((att) => {
-						return {
-							id: att.id,
-							size: att.size,
-							name: att.name,
-							mime_type: att.mime_type,
-							file_token_size: att.file_token_size,
-						};
+						if (att.mime_type === 'application/pdf') {
+							return {
+								id: att.id,
+								size: att.size,
+								name: att.name,
+								mime_type: att.mime_type,
+								file_token_size: att.file_token_size,
+							};
+						}
 					});
 				}
 
