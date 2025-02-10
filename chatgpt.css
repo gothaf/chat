@@ -333,6 +333,52 @@ header h1 {
 	background-color: #444;
 }
 
+.attachments-container {
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: column;
+	gap: 1rem;
+	margin: 0.75rem 0;
+	align-items: flex-end;
+}
+
+.attachment-item {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid #444;
+	border-radius: 8px;
+	max-width: 45%;
+	background-color: #212121;
+}
+
+.attachment-item .attachment-image {
+	max-width: 100%;
+	border-radius: 4px;
+}
+
+.attachment-name {
+	margin-top: 4px;
+	word-break: break-word;
+	font-size: 0.85rem;
+	text-align: center;
+}
+
+.pdf-icon,
+.generic-icon {
+	font-weight: bold;
+	text-align: center;
+	font-size: 0.9rem;
+	padding: 4px;
+	background-color: #444;
+	color: #fff;
+	border-radius: 4px;
+	margin-bottom: 4px;
+}
+
+.pdf-icon {
+	background-color: #ff5588; /* or any color you like for PDFs */
+}
+
 /* Force all nested <ul> levels to use the same bullet style */
 ul,
 ul ul,
@@ -492,4 +538,56 @@ h3 {
 	.timestamp-left {
 		margin-left: 3.5rem;
 	}
+}
+
+.p-2 {
+	padding: 0.5rem;
+}
+.gap-2 {
+	gap: 0.5rem;
+}
+.items-center {
+	align-items: center;
+}
+.w-80 {
+	width: 20rem;
+}
+.rounded-lg {
+	border-radius: 0.5rem;
+}
+.overflow-hidden {
+	overflow: hidden;
+}
+.shrink-0 {
+	flex-shrink: 0;
+}
+.w-10 {
+	width: 2.5rem;
+}
+.h-10 {
+	height: 2.5rem;
+}
+.relative {
+	position: relative;
+}
+.font-semibold {
+	font-weight: 600;
+}
+.text-ellipsis,
+.truncate {
+	text-overflow: ellipsis;
+}
+.truncate {
+	overflow: hidden;
+	white-space: nowrap;
+}
+.text-token-text-secondary {
+	color: #7d7d7d;
+}
+.text-sm {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+.inline-block {
+	display: inline-block;
 }

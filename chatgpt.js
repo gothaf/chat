@@ -58,27 +58,49 @@ document.addEventListener('click', (event) => {
 function getConversationMessages(conversation) {
 	var messages = [];
 	var currentNode = conversation.current_node;
+
 	while (currentNode != null) {
 		var node = conversation.mapping[currentNode];
+
+		// Basic checks (node.message exists, etc.)
 		if (node.message && node.message.content && node.message.content.parts && node.message.content.parts.length > 0 && (node.message.author.role !== 'system' || node.message.metadata.is_user_system_message)) {
 			if (node.message.recipient === 'all') {
-				author = node.message.author.role;
+				// Determine the author
+				let author = node.message.author.role;
 				if (author === 'assistant' || author === 'tool') {
 					author = 'ChatGPT';
 				} else if (author === 'system' && node.message.metadata.is_user_system_message) {
 					author = 'Custom user info';
 				}
-				if (node.message.content.content_type == 'text' || node.message.content.content_type == 'multimodal_text') {
+
+				// Gather attachments (if any)
+				let attachments = [];
+				if (node.message.metadata && node.message.metadata.attachments) {
+					attachments = node.message.metadata.attachments.map((att) => {
+						return {
+							id: att.id,
+							size: att.size,
+							name: att.name,
+							mime_type: att.mime_type,
+							file_token_size: att.file_token_size,
+						};
+					});
+				}
+
+				// Check content type or attachments
+				const contentType = node.message.content.content_type;
+				if (contentType === 'text' || contentType === 'multimodal_text' || attachments.length > 0) {
+					// Gather message "parts" (text, transcripts, images, etc.)
 					var parts = [];
 					for (var i = 0; i < node.message.content.parts.length; i++) {
 						var part = node.message.content.parts[i];
 						if (typeof part === 'string' && part.length > 0) {
 							parts.push({ text: part });
-						} else if (part.content_type == 'audio_transcription') {
+						} else if (part.content_type === 'audio_transcription') {
 							parts.push({ transcript: part.text });
-						} else if (part.content_type == 'audio_asset_pointer' || part.content_type == 'image_asset_pointer' || part.content_type == 'video_container_asset_pointer') {
+						} else if (part.content_type === 'audio_asset_pointer' || part.content_type === 'image_asset_pointer' || part.content_type === 'video_container_asset_pointer') {
 							parts.push({ asset: part });
-						} else if (part.content_type == 'real_time_user_audio_video_asset_pointer') {
+						} else if (part.content_type === 'real_time_user_audio_video_asset_pointer') {
 							if (part.audio_asset_pointer) {
 								parts.push({ asset: part.audio_asset_pointer });
 							}
@@ -90,15 +112,26 @@ function getConversationMessages(conversation) {
 							}
 						}
 					}
+
+					console.log('attachments: ', attachments);
 					let createTime = node.message.create_time || null;
-					if (parts.length > 0) {
-						messages.push({ author, parts, createTime });
+
+					// Only push the message if there's something to display
+					if (parts.length > 0 || attachments.length > 0) {
+						messages.push({
+							author,
+							parts,
+							createTime,
+							attachments, // now included in each message object
+						});
 					}
 				}
 			}
 		}
+
 		currentNode = node.parent;
 	}
+
 	return messages.reverse();
 }
 
@@ -132,10 +165,16 @@ function decodeAndFormatText(rawStr) {
 
 	decodedString = decodedString.replace(/\*(.*?)\*/g, '<i>$1</i>');
 
+	decodedString = decodedString.replace(/^\s*###\s+(.*)$/gm, '<h2>$1</h2>');
+	decodedString = decodedString.replace(/^\s*##\s+(.*)$/gm, '<h2>$1</h2>');
 	// 4) Convert lines starting with ### into <h3>...</h3>
 	decodedString = decodedString.replace(/^### (.*)$/gm, '<h3>$1</h3>');
 	// 5) Convert lines starting with ### into <h3>...</h3>
 	decodedString = decodedString.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
+
+	decodedString = decodedString.replace(/\uD83D\uDCA1|\uD83D\uDC49|\uD83D\uDD39|\ud83d\udd3b|\ud83d\udd25|\ud83c\udf1f|\u26a1/g, '');
+
+	decodedString = decodedString.replace(/\ufe0f\u20e3/g, '.');
 
 	// 6) Convert lines that contain exactly three dashes into <hr>
 	decodedString = decodedString.replace(/^---$/gm, '<hr>');
@@ -583,6 +622,74 @@ function initializeChatWithData(jsonData) {
 						}
 					}
 				});
+
+				// --- Render ATTACHMENTS (if any) ---
+				if (msg.attachments && msg.attachments.length > 0) {
+					let attachmentsContainer = document.createElement('div');
+					attachmentsContainer.className = 'attachments-container';
+
+					msg.attachments.forEach((att) => {
+						// Create a wrapper for each attachment
+						let attDiv = document.createElement('div');
+						attDiv.className = 'attachment-item';
+
+						// Check mime type to decide how to display
+						if (att.mime_type && att.mime_type.startsWith('image/')) {
+							// If it's an image, show a thumbnail or the actual image
+							attDiv.innerHTML = `
+							  <div class="attachment-thumb">
+								  <img src="${mapAttachmentIdToFileURL(att.id)}" 
+									  alt="${att.name}" 
+									  class="attachment-image" />
+							  </div>
+							  <div class="attachment-name">${att.name}</div>
+							`;
+						} else if (att.mime_type === 'application/pdf') {
+							// If it's a PDF, show PDF icon + name + link
+							attDiv.innerHTML = `
+  <div class="relative overflow-hidden border border-token-border-light text-sm bg-token-main-surface-primary rounded-xl">
+    <div class="p-2 w-80">
+      <div class="flex flex-row items-center gap-2">
+        <!-- Icon block -->
+        <div class="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+          <!-- The same PDF icon SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" fill="none" class="h-10 w-10 flex-shrink-0" width="36" height="36">
+            <rect width="36" height="36" rx="6" fill="#FF5588"></rect>
+            <path d="M19.6663 9.66663H12.9997C12.5576 9.66663 12.1337 9.84222 11.8212 10.1548C11.5086 10.4673 11.333 10.8913 11.333 11.3333V24.6666C11.333 25.1087 11.5086 25.5326 11.8212 25.8451C12.1337 26.1577 12.5576 26.3333 12.9997 26.3333H22.9997C23.4417 26.3333 23.8656 26.1577 24.1782 25.8451C24.4907 25.5326 24.6663 25.1087 24.6663 24.6666V14.6666L19.6663 9.66663Z"
+              stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M19.667 9.66663V14.6666H24.667" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M21.3337 18.8334H14.667" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M21.3337 22.1666H14.667" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M16.3337 15.5H15.5003H14.667" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </div>
+
+        <!-- Text: file name + extension -->
+        <div class="overflow-hidden">
+          <div class="truncate font-semibold">${att.name}</div>
+          <div class="truncate text-token-text-secondary">PDF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+						} else {
+							// Generic file
+							attDiv.innerHTML = `
+							  <div class="attachment-icon generic-icon">FILE</div>
+							  <div class="attachment-name">
+								  <a href="${mapAttachmentIdToFileURL(att.id)}" target="_blank">
+									  ${att.name}
+								  </a>
+							  </div>
+							`;
+						}
+
+						attachmentsContainer.appendChild(attDiv);
+					});
+
+					messageContainer.appendChild(attachmentsContainer);
+				}
 			}
 
 			// Build your bubbles (existing code)...
@@ -707,9 +814,19 @@ function formatDateTime(secondsSinceEpoch) {
 	if (sameDay) {
 		// Show only time, e.g. "12:34"
 		// You can customize with options: { hour: '2-digit', minute: '2-digit' }
-		return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		return 'Today, ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 	} else {
 		// Show short date & time, e.g. "1/30/24, 12:34 PM"
-		return dateObj.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+		return dateObj.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 	}
+}
+
+// Example: assetsJson usage or a direct mapping
+function mapAttachmentIdToFileURL(attachmentId) {
+	// If you have a dictionary of ID -> URL
+	if (assetsJson[attachmentId]) {
+		return assetsJson[attachmentId];
+	}
+	// Otherwise fallback
+	return `./uploads/${attachmentId}`;
 }
