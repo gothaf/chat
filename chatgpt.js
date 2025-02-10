@@ -76,8 +76,9 @@ function getConversationMessages(conversation) {
 				// Gather attachments (if any)
 				let attachments = [];
 				if (node.message.metadata && node.message.metadata.attachments) {
-					attachments = node.message.metadata.attachments.map((att) => {
-						if (att.mime_type === 'application/pdf') {
+					attachments = node.message.metadata.attachments
+						.filter((att) => att.mime_type === 'application/pdf')
+						.map((att) => {
 							return {
 								id: att.id,
 								size: att.size,
@@ -85,8 +86,7 @@ function getConversationMessages(conversation) {
 								mime_type: att.mime_type,
 								file_token_size: att.file_token_size,
 							};
-						}
-					});
+						});
 				}
 
 				// Check content type or attachments
