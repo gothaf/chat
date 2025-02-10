@@ -75,7 +75,7 @@ function getConversationMessages(conversation) {
 
 				// Gather attachments (if any)
 				let attachments = [];
-				if (node.message.metadata && node.message.metadata.attachments) {
+				if (node.message.metadata && node.message.metadata.attachments && node.message.metadata.attachments.mime_type) {
 					attachments = node.message.metadata.attachments.map((att) => {
 						return {
 							id: att.id,
@@ -113,7 +113,6 @@ function getConversationMessages(conversation) {
 						}
 					}
 
-					console.log('attachments: ', attachments);
 					let createTime = node.message.create_time || null;
 
 					// Only push the message if there's something to display
