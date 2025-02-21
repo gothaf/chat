@@ -775,17 +775,15 @@ function setupScrollTracking() {
 }
 
 function loadSidebar() {
-	// Load sidebar and header
 	fetch('../sidebar.html')
 		.then((response) => response.text())
 		.then((html) => {
-			// Inject the sidebar HTML
+			// 1) Inject the sidebar HTML
 			document.getElementById('sidebar-container').innerHTML = html;
 
-			// Add event listener to the hamburger button after the sidebar is loaded
+			// 2) Add event listener to the hamburger button
 			const hamburgerButton = document.getElementById('hamburger');
 			const sidebar = document.getElementById('sidebar');
-
 			if (hamburgerButton && sidebar) {
 				hamburgerButton.addEventListener('click', () => {
 					sidebar.classList.toggle('hidden');
@@ -793,6 +791,30 @@ function loadSidebar() {
 			} else {
 				console.error('Sidebar or hamburger button not found in loaded HTML.');
 			}
+
+			// 3) Function to log link clicks (adjust URL to your events.php)
+			function logSidebarClick(linkText) {
+				console.log('Link clicked: ', linkText);
+				fetch('https://api.test.tradext.gr/github_pages/events.php', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						event_message: `User clicked sidebar link: ${linkText}`,
+					}),
+				})
+					.then((resp) => resp.json())
+					.then((data) => console.log('Event logged:', data))
+					.catch((err) => console.error('Error logging event:', err));
+			}
+
+			// 4) Attach click event listeners to each sidebar link
+			const sidebarLinks = document.querySelectorAll('#sidebar a');
+			sidebarLinks.forEach((link) => {
+				link.addEventListener('click', () => {
+					logSidebarClick(link.textContent.trim());
+					// The user will still navigate to the link's href
+				});
+			});
 		})
 		.catch((error) => console.error('Error loading sidebar:', error));
 }
