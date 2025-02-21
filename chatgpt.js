@@ -35,6 +35,29 @@ document.addEventListener('DOMContentLoaded', () => {
 	} else {
 		console.error('JSON file path is not specified in the HTML.');
 	}
+
+	// 1) Read the meta property or document title
+	const metaTag = document.querySelector('meta[name="page-id"]');
+	const pageId = metaTag ? metaTag.content : 'Unknown';
+
+	// Alternatively, get the <title>:
+	const pageTitle = document.title || 'Untitled';
+
+	// 2) Log this info to your server
+	fetch('https://api.test.tradext.gr/github_pages/events.php', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			event_message: `Page loaded: ${pageId} (Title: ${pageTitle})`,
+		}),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			console.log('Logged page load:', data);
+		})
+		.catch((err) => {
+			console.error('Error logging page load:', err);
+		});
 });
 
 document.addEventListener('click', (event) => {
@@ -775,15 +798,17 @@ function setupScrollTracking() {
 }
 
 function loadSidebar() {
+	// Load sidebar and header
 	fetch('../sidebar.html')
 		.then((response) => response.text())
 		.then((html) => {
-			// 1) Inject the sidebar HTML
+			// Inject the sidebar HTML
 			document.getElementById('sidebar-container').innerHTML = html;
 
-			// 2) Add event listener to the hamburger button
+			// Add event listener to the hamburger button after the sidebar is loaded
 			const hamburgerButton = document.getElementById('hamburger');
 			const sidebar = document.getElementById('sidebar');
+
 			if (hamburgerButton && sidebar) {
 				hamburgerButton.addEventListener('click', () => {
 					sidebar.classList.toggle('hidden');
@@ -791,30 +816,6 @@ function loadSidebar() {
 			} else {
 				console.error('Sidebar or hamburger button not found in loaded HTML.');
 			}
-
-			// 3) Function to log link clicks (adjust URL to your events.php)
-			function logSidebarClick(linkText) {
-				console.log('Link clicked: ', linkText);
-				fetch('https://api.test.tradext.gr/github_pages/events.php', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						event_message: `User clicked sidebar link: ${linkText}`,
-					}),
-				})
-					.then((resp) => resp.json())
-					.then((data) => console.log('Event logged:', data))
-					.catch((err) => console.error('Error logging event:', err));
-			}
-
-			// 4) Attach click event listeners to each sidebar link
-			const sidebarLinks = document.querySelectorAll('#sidebar a');
-			sidebarLinks.forEach((link) => {
-				link.addEventListener('click', () => {
-					logSidebarClick(link.textContent.trim());
-					// The user will still navigate to the link's href
-				});
-			});
 		})
 		.catch((error) => console.error('Error loading sidebar:', error));
 }
