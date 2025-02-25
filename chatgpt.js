@@ -800,7 +800,7 @@ function setupScrollTracking() {
 function loadSidebar(pageId) {
 	// Load sidebar and header
 
-	var sidebarPath = pageId == 'main' ? './sidebar.html' : '../sidebar.html';
+	var sidebarPath = pageId == 'main' ? './sidebarMain.html' : '../sidebar.html';
 
 	fetch(sidebarPath)
 		.then((response) => response.text())
