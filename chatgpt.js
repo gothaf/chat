@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
-			event_message: `Page loaded: ${pageId} (Title: ${pageTitle})`,
+			event_message: `page_id: ${pageId}`,
 		}),
 	})
 		.then((response) => response.json())
@@ -815,6 +815,15 @@ function loadSidebar() {
 				});
 			} else {
 				console.error('Sidebar or hamburger button not found in loaded HTML.');
+			}
+
+			// 1) Read the meta property or document title
+			const metaTag = document.querySelector('meta[name="page-id"]');
+			const pageId = metaTag ? metaTag.content : 'Unknown';
+
+			if (pageId == 'main') {
+				console.log('PageID', pageId);
+				sidebar.classList.remove('hidden');
 			}
 		})
 		.catch((error) => console.error('Error loading sidebar:', error));
