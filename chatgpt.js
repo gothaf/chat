@@ -22,23 +22,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	const scriptTag = document.querySelector('script#data-config');
 	const jsonFilePath = scriptTag?.getAttribute('src');
 
+	// 1) Read the meta property or document title
+	const metaTag = document.querySelector('meta[name="page-id"]');
+	const pageId = metaTag ? metaTag.content : 'Unknown';
+
 	if (jsonFilePath) {
 		loadJSONFile(jsonFilePath, (error, jsonData) => {
 			if (error) {
 				console.error(error);
 			} else {
 				initializeChatWithData(jsonData);
-				loadSidebar();
+				loadSidebar(metaTag);
 				setupScrollTracking(); // Setup scroll tracking after messages are loaded
 			}
 		});
 	} else {
 		console.error('JSON file path is not specified in the HTML.');
 	}
-
-	// 1) Read the meta property or document title
-	const metaTag = document.querySelector('meta[name="page-id"]');
-	const pageId = metaTag ? metaTag.content : 'Unknown';
 
 	// Alternatively, get the <title>:
 	const pageTitle = document.title || 'Untitled';
@@ -797,9 +797,11 @@ function setupScrollTracking() {
 	});
 }
 
-function loadSidebar() {
+function loadSidebar(metaTag) {
 	// Load sidebar and header
-	fetch('../sidebar.html')
+
+	var sidebarPath = metaTag == 'main' ? './sidebar.html' : '../sidebar.html';
+	fetch(sidebarPath)
 		.then((response) => response.text())
 		.then((html) => {
 			// Inject the sidebar HTML
