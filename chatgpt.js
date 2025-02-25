@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				console.error(error);
 			} else {
 				initializeChatWithData(jsonData);
-				loadSidebar(metaTag);
+				loadSidebar(pageId);
 				setupScrollTracking(); // Setup scroll tracking after messages are loaded
 			}
 		});
@@ -797,10 +797,11 @@ function setupScrollTracking() {
 	});
 }
 
-function loadSidebar(metaTag) {
+function loadSidebar(pageId) {
 	// Load sidebar and header
 
-	var sidebarPath = metaTag == 'main' ? './sidebar.html' : '../sidebar.html';
+	var sidebarPath = pageId == 'main' ? './sidebar.html' : '../sidebar.html';
+
 	fetch(sidebarPath)
 		.then((response) => response.text())
 		.then((html) => {
