@@ -524,8 +524,8 @@ hr {
 	width: 105%;
 	border-color: hsla(0, 0%, 100%, 0.25);
 	border-top-width: 1px;
-	margin-bottom: 3em;
-	margin-top: 3em;
+	margin-bottom: 1em;
+	margin-top: 1em;
 	margin-left: -1.5rem;
 }
 
@@ -572,14 +572,16 @@ h3 {
 }
 @media only screen and (max-width: 768px) {
 	body {
-		font-size: 1.1rem; /* Adjust font size for smaller screens */
+		font-size: 1rem; /* Adjust font size for smaller screens */
 	}
 
 	/* Make title smaller */
 	header h1 {
 		font-size: 1rem;
 	}
-
+	h2 {
+		font-size: 1.35rem;
+	}
 	/* Reduce header padding to save space on small screens */
 	header {
 		padding: 8px 0;
@@ -587,7 +589,7 @@ h3 {
 
 	/* Adjust hamburger size/position */
 	#hamburger {
-		font-size: 1.2rem; /* slightly smaller icon */
+		font-size: 1.4rem; /* slightly smaller icon */
 		margin-left: 5px; /* push it away from the left edge */
 	}
 	#root {
@@ -597,11 +599,11 @@ h3 {
 		padding: 0;
 	}
 	.message {
-		font-size: 1.1rem;
+		font-size: 1rem;
 	}
 
 	.bubble {
-		line-height: 1.5;
+		line-height: 1.4;
 		padding: 0.3rem;
 	}
 	.message.user .bubble {
