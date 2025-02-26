@@ -112,6 +112,14 @@ function getConversationMessages(conversation) {
 						});
 				}
 
+				// If message has content_references, store them
+				let contentRefs = [];
+				if (node.message.metadata && node.message.metadata.content_references) {
+					contentRefs = node.message.metadata.content_references;
+
+					console.log(contentRefs);
+				}
+
 				// Check content type or attachments
 				const contentType = node.message.content.content_type;
 				if (contentType === 'text' || contentType === 'multimodal_text' || attachments.length > 0) {
@@ -147,6 +155,7 @@ function getConversationMessages(conversation) {
 							parts,
 							createTime,
 							attachments, // now included in each message object
+							contentRefs,
 						});
 					}
 				}
@@ -162,48 +171,57 @@ function getConversationMessages(conversation) {
 // A helper function that decodes HTML entities,
 // then converts **text** to <strong>text</strong>.
 function decodeAndFormatText(rawStr) {
-	// 1) Decode HTML entities
-	const parser = new DOMParser();
-	let decodedString = parser.parseFromString(rawStr, 'text/html').documentElement.textContent;
+	// 1) Decode minimal HTML entities without removing tags:
+	//    i.e. turn "&lt;" -> "<", "&gt;" -> ">", "&amp;" -> "&", etc.
+	let decodedString = decodeHtmlEntities(rawStr);
 
-	// Group consecutive dash-lines into a single <ul> block:
-	decodedString = decodedString.replace(
-		/(?:^-\s.*\n?)+/gm, // match one or more lines starting with "- "
-		(match) => {
-			// remove any trailing newline
-			const trimmed = match.trimEnd();
-
-			// split lines -> <li> for each line
-			const items = trimmed.split('\n').map((line) => {
-				// remove initial dash and any space after it
-				return line.replace(/^-+\s+(.*)$/, '<li>$1</li>');
-			});
-
-			// wrap them in a single <ul> block
-			return `<ul>\n${items.join('\n')}\n</ul>\n`;
-		}
-	);
+	// 2) Group consecutive dash-lines into a single <ul> block:
+	decodedString = decodedString.replace(/(?:^-\s.*\n?)+/gm, (match) => {
+		const trimmed = match.trimEnd();
+		const items = trimmed.split('\n').map((line) => {
+			return line.replace(/^-+\s+(.*)$/, '<li>$1</li>');
+		});
+		return `<ul>\n${items.join('\n')}\n</ul>\n`;
+	});
 
 	// 3) Convert **...** to <strong>...</strong>
 	decodedString = decodedString.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
+	// 4) Convert *...* to <i>...</i>
 	decodedString = decodedString.replace(/\*(.*?)\*/g, '<i>$1</i>');
 
+	// 5) Convert lines that start with "##" or "###" into <h2> or <h3> (etc.)
 	decodedString = decodedString.replace(/^\s*###\s+(.*)$/gm, '<h2>$1</h2>');
 	decodedString = decodedString.replace(/^\s*##\s+(.*)$/gm, '<h2>$1</h2>');
-	// 4) Convert lines starting with ### into <h3>...</h3>
 	decodedString = decodedString.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-	// 5) Convert lines starting with ### into <h3>...</h3>
 	decodedString = decodedString.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
 
+	// 6) Remove certain emojis
 	decodedString = decodedString.replace(/\uD83D\uDCA1|\uD83D\uDC49|\uD83D\uDD39|\ud83d\udd3b|\ud83d\udd25|\ud83c\udf1f|\u26a1/g, '');
 
+	// 7) Replace "fe0f 20e3" with "."
 	decodedString = decodedString.replace(/\ufe0f\u20e3/g, '.');
 
-	// 6) Convert lines that contain exactly three dashes into <hr>
+	// 8) Convert lines that contain exactly three dashes into <hr>
 	decodedString = decodedString.replace(/^---$/gm, '<hr>');
 
 	return decodedString;
+}
+
+/**
+ * decodeHtmlEntities
+ *
+ * A simple helper that decodes common HTML entities
+ * WITHOUT stripping out existing tags.
+ */
+function decodeHtmlEntities(str) {
+	return str
+		.replace(/&lt;/g, '<')
+		.replace(/&gt;/g, '>')
+		.replace(/&amp;/g, '&')
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/&nbsp;/g, ' ');
 }
 
 /**
@@ -263,7 +281,7 @@ function convertTableLinesToHtml(tableLines) {
 	// We'll skip that line when building rows.
 
 	// Example approach:
-	let htmlTable = '<table><tbody>\n';
+	let htmlTable = '<div class="table-wrapper"><table><tbody>';
 
 	// If there's a second line that looks like a separator row, skip it
 	// We check something like /^[|\s-]+$/ to see if it's all '|', '-', or spaces
@@ -300,7 +318,7 @@ function convertTableLinesToHtml(tableLines) {
 		htmlTable += rowHtml;
 	}
 
-	htmlTable += '</tbody></table>\n';
+	htmlTable += '</tbody></table></div>\n';
 	return htmlTable;
 }
 
@@ -450,6 +468,7 @@ function parseListsAndHeadings(text) {
 		while (stack.length > 0) {
 			closeLastList();
 		}
+
 		html += `<p>${decodeAndFormatText(line)}</p>`;
 	}
 
@@ -464,6 +483,93 @@ function parseListsAndHeadings(text) {
 var assetsJson = {
 	'file-service://file-62tGUeckVNgDo7VxUuAMab': 'file-62tGUeckVNgDo7VxUuAMab-A3C5A976-44A7-4EEF-8355-558E41F3C5F8.jpeg',
 };
+
+/* NEW FUNCTION:
+   applyContentReferences(text, contentReferences)
+   - Loops over contentReferences in descending order (so replacements don't alter string indices).
+   - For each reference:
+     - if type='hidden', remove the matched_text from `text`
+     - if type='grouped_webpages', replace matched_text with an <a> link (or multiple links if "items" has multiple)
+     - if type='video', replace matched_text with an <a><img/></a> or whatever you want
+*/
+/**
+ * applyContentReferencesByText
+ *
+ * Looks for the exact `matched_text` in `text` and replaces it
+ * based on the reference type.
+ */
+function applyContentReferences(text, contentReferences) {
+	// Sort references in descending order of start_idx so we replace from end to start
+	// to avoid messing up subsequent indices.
+	const sortedRefs = [...contentReferences].sort((a, b) => b.start_idx - a.start_idx);
+	console.log('SORTED REFS', sortedRefs);
+
+	let modifiedText = text;
+
+	sortedRefs.forEach((ref) => {
+		const { type, matched_text, start_idx, end_idx } = ref;
+
+		if (!matched_text || start_idx == null || end_idx == null) {
+			return;
+		}
+
+		let replacement = '';
+
+		switch (type) {
+			case 'hidden':
+				// simply remove this text (replace with empty string)
+				replacement = '';
+				break;
+
+			case 'grouped_webpages':
+				// If we have 'items', pick the first or multiple?
+				// Let's assume we show the first one for simplicity
+				if (ref.items && ref.items.length > 0) {
+					const item = ref.items[0];
+					// item.attribution or item.title for link text?
+					// We'll use the item.attribution as text
+					const linkText = item.attribution || 'External Link';
+					const linkUrl = item.url || '#';
+					replacement = `<a href="${linkUrl}" target="_blank" rel="noopener" class="custom-link"><span class="truncate">${linkText}</span></a>`;
+				}
+				break;
+
+			case 'video':
+				const videoId = ref.video_id;
+				const videoSite = ref.video_site;
+				if (videoId) {
+					// build embed iframe
+					replacement = `
+			 <div class="mb-3">
+  <div class="responsive-video-container">
+				  <iframe class="aspect-video w-full rounded-lg" src="https://www.youtube.com/embed/${videoId}"	frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+					referrerpolicy="strict-origin-when-cross-origin"
+					allowfullscreen
+				  ></iframe>
+				</div>
+			  </div>
+			  `;
+				}
+
+				break;
+
+			// You can handle other types if needed
+			default:
+				// Do nothing
+				break;
+		}
+
+		// Replace the matched substring [start_idx, end_idx) in `modifiedText`
+		// with the replacement. Note that end_idx is presumably the character
+		// AFTER the match, so we slice up to that index.
+		// Double-check the off-by-one logic if needed.
+		const before = modifiedText.slice(0, start_idx);
+		const after = modifiedText.slice(end_idx);
+		modifiedText = before + replacement + after;
+	});
+
+	return modifiedText;
+}
 
 // on load, add messages to the root div
 // on load, add messages to the root div
@@ -540,10 +646,16 @@ function initializeChatWithData(jsonData) {
 					// Prepare the part’s text
 					let bubbleHtml = '';
 					if (part.text) {
-						// 1) parse lists and headings (existing step)
-						let intermediate = parseTablesInText(part.text);
+						let decoded = part.text;
 
-						// 2) parse tables, if any
+						if (msg.contentRefs.length > 0) {
+							// 2) apply content references by string matching
+							decoded = applyContentReferences(part.text, msg.contentRefs);
+						}
+						// 3) parse tables
+						let intermediate = parseTablesInText(decoded);
+
+						// 4) parse lists/headings
 						let finalHtml = parseListsAndHeadings(intermediate);
 
 						bubbleHtml = finalHtml;
@@ -716,8 +828,6 @@ function initializeChatWithData(jsonData) {
 				}
 			}
 
-			// Build your bubbles (existing code)...
-
 			// After building all parts in this message, append a timestamp.
 			if (msg.createTime) {
 				const formattedTime = formatDateTime(msg.createTime);
@@ -825,7 +935,6 @@ function loadSidebar(pageId) {
 			const pageId = metaTag ? metaTag.content : 'Unknown';
 
 			if (pageId == 'main') {
-				console.log('PageID', pageId);
 				sidebar.classList.remove('hidden');
 			}
 		})
