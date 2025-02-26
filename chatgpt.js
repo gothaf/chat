@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
-			event_message: `page_id: ${pageId}`,
+			page_id: pageId,
 		}),
 	})
 		.then((response) => response.json())
